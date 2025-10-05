@@ -1,0 +1,74 @@
+openapi: 3.0.3
+info:
+  title: URL Shortener API
+  description: API pour raccourcir des URLs
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/api-v1
+    description: API v1
+  - url: http://localhost:8080/api-v2
+    description: API v2
+paths:
+  /:
+    get:
+      summary: Obtenir le nombre de liens
+      responses:
+        '200':
+          description: Succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+    post:
+      summary: Créer un lien raccourci
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - url
+              properties:
+                url:
+                  type: string
+                  format: uri
+      responses:
+        '201':
+          description: Lien créé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                  short_url:
+                    type: string
+                  created_at:
+                    type: string
+        '400':
+          description: URL invalide
+  /{url}:
+    get:
+      summary: Rediriger ou obtenir les infos du lien
+      parameters:
+        - name: url
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '302':
+          description: Redirection
+        '404':
+          description: Lien non trouvé
+  /error:
+    get:
+      summary: Route de test d'erreur
+      responses:
+        '500':
+          description: Erreur serveur

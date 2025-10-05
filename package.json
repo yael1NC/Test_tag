@@ -1,0 +1,41 @@
+{
+  "name": "tp6_devweb_yael",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "cross-env NODE_ENV=development npx nodemon server.mjs",
+    "prod": "cross-env NODE_ENV=production node server.mjs",
+    "format": "prettier --write **/*.mjs",
+    "lint": "eslint **/*.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yael1NC/TP6_devweb_yael.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/yael1NC/TP6_devweb_yael/issues"
+  },
+  "homepage": "https://github.com/yael1NC/TP6_devweb_yael#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "cross-env": "^10.1.0",
+    "dotenv": "^17.2.3",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "morgan": "^1.10.1",
+    "nodemon": "^3.1.10",
+    "sqlite3": "^5.1.7",
+    "swagger-ui-express": "^5.0.1"
+  },
+  "devDependencies": {
+    "eslint": "^9.37.0",
+    "prettier": "^3.6.2"
+  }
+}

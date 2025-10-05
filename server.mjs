@@ -52,7 +52,7 @@ try {
 }
 
 // Routes API
-app.use('/api-v1', apiV1Router);
+app.use('/api-v1', apiV1Router); 
 
 // Routes
 app.get('/', (req, res) => {

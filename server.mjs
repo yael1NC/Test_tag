@@ -12,6 +12,7 @@ import { config, logLevel } from './config.mjs';
 import { initDatabase, closeDatabase } from './database/database.mjs';
 
 import apiV1Router from './router/api-v1.mjs';
+import apiV2Router from './router/api-v2.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -53,6 +54,7 @@ try {
 
 // Routes API
 app.use('/api-v1', apiV1Router);
+app.use('/api-v2', apiV2Router);
 
 // Routes
 app.get('/', (req, res) => {

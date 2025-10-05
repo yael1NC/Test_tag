@@ -53,13 +53,3 @@ Express utilise ETag par défaut. En mode privé + Ctrl+Shift+R, le cache est by
 
 ## 10. Partage de base entre instances
 Les deux instances partagent la même base SQLite (`database/database.sqlite`), donc les liens sont visibles des deux côtés.
-
-
-Après cette étape, faire :
-```bash
-git add .
-git commit -m "Partie 1: Configuration initiale et prise en main"
-git tag reponses
-git push origin main
-git push origin reponses
-```

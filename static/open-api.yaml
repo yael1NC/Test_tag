@@ -1,17 +1,32 @@
 openapi: 3.0.3
 info:
   title: URL Shortener API
-  description: API pour raccourcir des URLs
-  version: 1.0.0
+  description: |
+    API pour raccourcir des URLs avec support de négociation de contenu.
+    
+    **Fonctionnalités :**
+    - Réduction d'URLs longues en codes courts
+    - Redirection automatique vers l'URL d'origine
+    - Compteur de visites
+    - Support JSON et HTML selon l'en-tête Accept
+    - Suppression sécurisée avec clé secrète
+  version: 2.0.0
+  contact:
+    name: Support API
+    url: http://localhost:8080/api-docs
+
 servers:
   - url: http://localhost:8080/api-v1
-    description: API v1
+    description: API v1 (JSON seulement)
   - url: http://localhost:8080/api-v2
-    description: API v2
+    description: API v2 (JSON et HTML avec négociation de contenu)
+
 paths:
   /:
     get:
-      summary: Obtenir le nombre de liens
+      summary: Obtenir le nombre de liens ou afficher la page d'accueil
+      description: |
+        Retourne le nombre total de liens créés en JSON, ou affiche une page d'accueil avec formulaire en HTML.
       responses:
         '200':
           description: Succès
@@ -22,8 +37,24 @@ paths:
                 properties:
                   count:
                     type: integer
+                    description: Nombre total de liens créés
+                    example: 42
+            text/html:
+              schema:
+                type: string
+                description: Page HTML avec formulaire de création
+        '406':
+          description: Format non accepté
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
     post:
       summary: Créer un lien raccourci
+      description: |
+        Crée un nouveau lien raccourci à partir d'une URL longue.
+        Retourne les informations du lien en JSON ou une page de confirmation en HTML.
       requestBody:
         required: true
         content:
@@ -36,39 +67,187 @@ paths:
                 url:
                   type: string
                   format: uri
+                  description: URL à raccourcir (doit commencer par http:// ou https://)
+                  example: "https://www.example.com/very/long/path/to/content"
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - url
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: URL à raccourcir
       responses:
         '201':
-          description: Lien créé
+          description: Lien créé avec succès
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  url:
-                    type: string
-                  short_url:
-                    type: string
-                  created_at:
-                    type: string
+                $ref: '#/components/schemas/CreatedLink'
+            text/html:
+              schema:
+                type: string
+                description: Page HTML de confirmation
         '400':
           description: URL invalide
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+            text/html:
+              schema:
+                type: string
+                description: Page d'erreur HTML
+        '406':
+          description: Format non accepté
+        '500':
+          description: Erreur serveur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /{url}:
     get:
-      summary: Rediriger ou obtenir les infos du lien
+      summary: Rediriger vers l'URL originale ou obtenir les informations
+      description: |
+        En HTML: Incrémente le compteur de visites et redirige vers l'URL d'origine.
+        En JSON: Retourne les informations du lien sans redirection.
       parameters:
         - name: url
           in: path
           required: true
           schema:
             type: string
+            pattern: '^[A-Za-z0-9]{6}$'
+          description: Code court du lien (6 caractères alphanumériques)
+          example: "abc123"
       responses:
+        '200':
+          description: Informations du lien (JSON seulement)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinkInfo'
         '302':
-          description: Redirection
+          description: Redirection vers l'URL originale (HTML seulement)
+          headers:
+            Location:
+              description: URL de destination
+              schema:
+                type: string
+                format: uri
         '404':
           description: Lien non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+            text/html:
+              schema:
+                type: string
+                description: Page d'erreur 404
+        '406':
+          description: Format non accepté
+
   /error:
     get:
-      summary: Route de test d'erreur
+      summary: Route de test d'erreur (pour les tests)
+      description: Génère volontairement une erreur 500 pour tester la gestion d'erreurs
       responses:
         '500':
-          description: Erreur serveur
+          description: Erreur serveur générée volontairement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    CreatedLink:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+          description: URL originale
+          example: "https://www.example.com/very/long/path"
+        short_url:
+          type: string
+          pattern: '^[A-Za-z0-9]{6}$'
+          description: Code court généré
+          example: "abc123"
+        created_at:
+          type: string
+          format: date-time
+          description: Date et heure de création
+          example: "2025-09-28T10:30:00.000Z"
+        secret:
+          type: string
+          description: Clé secrète pour la suppression du lien
+          example: "XyZ9kL2m"
+      required:
+        - url
+        - short_url
+        - created_at
+        - secret
+
+    LinkInfo:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+          description: URL originale
+          example: "https://www.example.com/very/long/path"
+        short_url:
+          type: string
+          pattern: '^[A-Za-z0-9]{6}$'
+          description: Code court
+          example: "abc123"
+        created_at:
+          type: string
+          format: date-time
+          description: Date et heure de création
+          example: "2025-09-28T10:30:00.000Z"
+        visits:
+          type: integer
+          minimum: 0
+          description: Nombre de visites
+          example: 15
+      required:
+        - url
+        - short_url
+        - created_at
+        - visits
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Message d'erreur
+          example: "URL invalide"
+      required:
+        - error
+
+  examples:
+    ValidUrl:
+      summary: URL valide
+      value:
+        url: "https://nodejs.org/api/http.html#event-connect_1"
+    
+    InvalidUrl:
+      summary: URL invalide
+      value:
+        url: "not-a-valid-url"
+
+    CreatedLinkExample:
+      summary: Lien créé
+      value:
+        url: "https://nodejs.org/api/http.html#event-connect_1"
+        short_url: "WmFJQp"
+        created_at: "2025-09-28T10:30:00.000Z"
+        secret: "RatQak12"

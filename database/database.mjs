@@ -4,6 +4,15 @@ import { config } from '../config.mjs';
 
 let db = null;
 
+// Vérifier si le secret correspond au lien
+export async function verifySecret(shortUrl, secret) {
+  const link = await dbGet(
+    'SELECT secret FROM links WHERE short_url = ?',
+    [shortUrl]
+  );
+  return link && link.secret === secret;
+}
+
 export async function initDatabase() {
   return new Promise(async (resolve, reject) => {
     try {

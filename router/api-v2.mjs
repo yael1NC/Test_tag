@@ -96,7 +96,7 @@ router.post('/', async (req, res) => {
         'text/html': () => {
           const content = `
             <div class="result error">
-              <h3> Erreur de validation</h3>
+              <h3>Erreur de validation</h3>
               <p><strong>Erreur :</strong> L'URL fournie n'est pas valide.</p>
               <p>Veuillez vérifier que votre URL commence par <code>http://</code> ou <code>https://</code></p>
             </div>

@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Réducteur d'URL - Client AJAX</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            max-width: 700px;
+            width: 100%;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background-size: 200% 100%;
+            animation: gradient 3s ease infinite;
+        }
+
+        @keyframes gradient {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+
+        .emoji {
+            font-size: 3rem;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        form {
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #555;
+            font-size: 1.1rem;
+        }
+
+        input[type="url"] {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #fafbfc;
+            font-family: inherit;
+        }
+
+        input[type="url"]:focus {
+            outline: none;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        input[type="url"]:valid {
+            border-color: #28a745;
+        }
+
+        input[type="url"]::placeholder {
+            color: #aaa;
+        }
+
+        button {
+            color: white;
+            padding: 16px 32px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            background: linear-gradient(135deg, #ccc 0%, #aaa 100%);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        #result {
+            margin-top: 30px;
+            padding: 25px;
+            border-radius: 16px;
+            display: none;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #result.success {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border: 2px solid #28a745;
+            color: #155724;
+        }
+
+        #result.error {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            border: 2px solid #dc3545;
+            color: #721c24;
+        }
+
+        .result-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .result-content p {
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+
+        .result-content strong {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .short-link-container {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 15px 0;
+            border: 2px dashed #007bff;
+        }
+
+        .short-link {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #007bff;
+            word-break: break-all;
+            display: block;
+            margin-bottom: 15px;
+            text-decoration: none;
+        }
+
+        .short-link:hover {
+            text-decoration: underline;
+        }
+
+        .copy-button {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            padding: 12px 24px;
+            font-size: 15px;
+            width: auto;
+            display: inline-flex;
+        }
+
+        .copy-button:hover {
+            box-shadow: 0 10px 20px rgba(40, 167, 69, 0.4);
+        }
+
+        .copy-button.copied {
+            background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .info-item {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .info-item strong {
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        .info-item .value {
+            margin-top: 5px;
+            font-size: 1rem;
+            color: #555;
+        }
+
+        code {
+            background: rgba(0, 0, 0, 0.1);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+            color: #e83e8c;
+        }
+
+        .alert-note {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px 20px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Réducteur d'URL</h1>
+        <p class="subtitle">Transformez vos longues URLs en liens courts et pratiques</p>
+        
+        <form id="url-form">
+            <div class="form-group">
+                <label for="url">Saisissez l'URL à raccourcir :</label>
+                <input 
+                    type="url" 
+                    id="url" 
+                    name="url" 
+                    placeholder="https://example.com/ma-tres-longue-url" 
+                    required
+                    autocomplete="url"
+                    autofocus
+                >
+            </div>
+            <button type="submit" id="submit-btn">
+                <span id="btn-text">Raccourcir l'URL</span>
+                <span id="loading" class="spinner" style="display: none;"></span>
+            </button>
+        </form>
+
+        <div id="result">
+            <div id="result-content"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

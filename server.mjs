@@ -52,19 +52,32 @@ try {
   console.error('Erreur chargement Swagger:', error);
 }
 
+
 // Routes API
 app.use('/api-v1', apiV1Router);
 app.use('/api-v2', apiV2Router);
 
-// Routes
+// Client AJAX
+app.get('/client', (req, res) => {
+  res.sendFile(join(__dirname, 'static', 'client.html'));
+});
+
+// Route par défaut
 app.get('/', (req, res) => {
-  res.json({ message: 'URL Shortener API' });
+  res.redirect('/client');
 });
 
 // Route d'erreur pour les tests
 app.get('/error', (req, res) => {
   throw new Error('Test error 500');
 });
+
+
+// Routes
+app.get('/', (req, res) => {
+  res.json({ message: 'URL Shortener API' });
+});
+
 
 // Importation des routeurs (à créer)
 // app.use('/api-v1', await import('./router/api-v1.mjs'));
